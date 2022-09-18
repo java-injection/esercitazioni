@@ -1,0 +1,2 @@
+ciao
+show databases;

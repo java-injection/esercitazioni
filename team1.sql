@@ -5,9 +5,9 @@ DROP TABLE IF EXISTS posti;
 
 CREATE TABLE IF NOT EXISTS posti (
 
-slot INT UNSIGNED PRIMARY KEY,
-posizione INT UNSIGNED PRIMARY KEY
-
+slot INT UNSIGNED ,
+posizione INT UNSIGNED, 
+PRIMARY KEY (slot, posizione)
 );
 
 -- I prezzi hanno al massimo 2 cifre intere e 2 decimali
@@ -17,9 +17,20 @@ CREATE TABLE IF NOT EXISTS prodotti(
 
 nome VARCHAR(50) PRIMARY KEY NOT NULL,
 tipo VARCHAR(50) NOT NULL,
-costo INT UNSIGNED
+costo INT UNSIGNED 
 
 );
+
+
+CREATE TABLE  merendine(
+
+scadenza VARCHAR(50),
+nome VARCHAR(50),
+FOREIGN KEY (nome) REFERENCES prodotti(nome)
+
+);
+
+
 
 
 --  nomi e cognomi delle persone
@@ -36,3 +47,11 @@ nome VARCHAR(50) NOT NULL,
 cognome VARCHAR(50) NOT NULL
 
 );
+
+
+
+
+
+
+
+

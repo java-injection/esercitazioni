@@ -1,6 +1,8 @@
 
 CREATE database distributore;
 
+USE distributore
+
 DROP TABLE IF EXISTS posti;
 
 CREATE TABLE IF NOT EXISTS posti (
@@ -15,7 +17,7 @@ PRIMARY KEY (slot, posizione)
 
 DROP TABLE IF EXISTS prodotti;
 
-CREATE TABLE IF NOT EXISTS prodotti(
+CREATE TABLE prodotti(
 
 nome VARCHAR(50) PRIMARY KEY NOT NULL,
 tipo VARCHAR(50) NOT NULL,
@@ -33,15 +35,12 @@ FOREIGN KEY (nome) REFERENCES prodotti(nome)
 
 );
 
-
-
-
 --  nomi e cognomi delle persone
 --  non possono essere nulli o stringhe vuote
 
-DROP TABLE IF EXISTS persona;
+DROP TABLE IF EXISTS persone;
 
-CREATE TABLE IF NOT EXISTS persone(
+CREATE TABLE  persone(
 
 -- controllo se nome e cognome sono stringhe vuote :)
 CONSTRAINT stringhe_svuote CHECK(nome != "" AND cognome != ""),

@@ -4,65 +4,81 @@ CREATE DATABASE  IF NOT EXISTS distributore_solution;
 
 USE distributore_solution;
 
-
 CREATE TABLE IF NOT EXISTS prodotto(
-    nome VARCHAR(50) PRIMARY KEY CHECK(nome != ''),
-    costo DECIMAL(4,2) UNSIGNED CHECK(costo <=10) NOT NULL,
-    tipo ENUM('bevanda','merendina','altro') NOT NULL
+    CONSTRAINT cp1_nome_non_vuoto CHECK(nome != ''),
+    CONSTRAINT cp2_costo_other_minor10 CHECK(tipo != 'BEVANDA' OR tipo != 'MERENDINA' OR (tipo = 'ALTRO' AND costo <=10)),
+    nome VARCHAR(50) PRIMARY KEY ,
+    costo DECIMAL(4,2) UNSIGNED  NOT NULL,
+    tipo ENUM('BEVANDA','MERENDINA','ALTRO') NOT NULL
 );
 
 
 CREATE TABLE IF NOT EXISTS posto(
+    CONSTRAINT cposto_max5 CHECK(posizione<=5),
+    CONSTRAINT ck_prodotto_not_empty CHECK(prodotto != ''),
     slot INT UNSIGNED NOT NULL,
-    posizione  INT UNSIGNED NOT NULL CHECK(posizione<=5),
-    prodotto VARCHAR(50) NOT NULL CHECK(prodotto <> ''),
-    scadenza DATE NULL CHECK(scadenza > CURDATE()), -- controlla che la scadenza sia in avanti rispetto a oggi
-    PRIMARY KEY (prodotto,posizione),
+    posizione  INT UNSIGNED NOT NULL,
+    prodotto VARCHAR(50) NOT NULL,
+    scadenza DATE NULL,
+    PRIMARY KEY (slot,posizione),
     FOREIGN KEY(prodotto) REFERENCES prodotto(nome)
 );
 
 CREATE TABLE IF NOT EXISTS persona(
-    CF VARCHAR(50) NOT NULL PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL CHECK(nome <> ''),
-    cognome VARCHAR(50) NOT NULL CHECK(cognome <> ''),
-    seriale TEXT NOT NULL
+    CONSTRAINT ck_CF_exact_length16 CHECK (LENGTH(CF) = 16),
+    CONSTRAINT ck_anagrafica_not_empty CHECK (nome != '' AND cognome != ''),
+    CONSTRAINT ck_serial_format CHECK(LENGTH(seriale) = 6  AND seriale REGEXP '^[0-9a-zA-Z]{4}[0-9]{2}$'),
+    CF VARCHAR(16) PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
+    cognome VARCHAR(50) NOT NULL,
+    seriale VARCHAR(6) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS prodotto_venduto(
-    tempo_vendita DECIMAL(4,2) UNSIGNED NOT NULL UNIQUE,
-    nome VARCHAR(50) NOT NULL CHECK(nome <> '') REFERENCES prodotto(nome),
-    CF VARCHAR(50) NOT NULL REFERENCES persona(CF),
-    PRIMARY KEY(tempo_vendita,nome)
+    tempo_vendita TIME NOT NULL UNIQUE,
+    prodotto VARCHAR(50) NOT NULL,
+    CF VARCHAR(16) NOT NULL,
+    PRIMARY KEY(tempo_vendita,prodotto),
+    FOREIGN KEY(CF) REFERENCES persona(CF),
+    FOREIGN KEY(prodotto) REFERENCES prodotto(nome)
 );
 
-INSERT INTO prodotto VALUES('Fanta',3.5,'bevanda');
-INSERT INTO prodotto VALUES('Coca',4,'bevanda');
-INSERT INTO prodotto VALUES('kinder',5,'merendina');
-INSERT INTO prodotto VALUES('accendino',7,'altro');
-INSERT INTO prodotto VALUES('cartine_lunghe',1,'altro');
+INSERT INTO prodotto VALUES('Fanta',2,'BEVANDA');
+INSERT INTO prodotto VALUES('Coca',2,'BEVANDA');
+INSERT INTO prodotto VALUES('Kinder Bueno',1.80,'MERENDINA');
+INSERT INTO prodotto VALUES('Fiesta',0.90,'MERENDINA');
+INSERT INTO prodotto VALUES('Crostatina',0.60,'MERENDINA');
+INSERT INTO prodotto VALUES('Patatine',1.20,'MERENDINA');
+INSERT INTO prodotto VALUES('Accendino',3,'ALTRO');
+INSERT INTO prodotto VALUES('Cartine_lunghe',1,'ALTRO');
 
-INSERT INTO posto VALUES(1,3,'Fanta');
-INSERT INTO posto VALUES(3,5,'Coca');
-INSERT INTO posto VALUES(5,1,'knder');
-INSERT INTO posto VALUES(2,2,'accendino');
-INSERT INTO posto VALUES(6,5,'cartine_lunghe');
+INSERT INTO posto VALUES(1,3,'Fanta',NULL);
+INSERT INTO posto VALUES(3,5,'Coca',NULL);
+INSERT INTO posto VALUES(5,1,'Kinder Bueno','2024-06-24');
+INSERT INTO posto VALUES(2,2,'Accendino',NULL);
+INSERT INTO posto VALUES(6,5,'Cartine_lunghe',NULL);
+INSERT INTO posto VALUES(11,1,'Kinder Bueno','2024-06-24');
+INSERT INTO posto VALUES(11,2,'Kinder Bueno','2024-06-25');
+INSERT INTO posto VALUES(11,3,'Kinder Bueno','2026-06-26');
+INSERT INTO posto VALUES(11,4,'Kinder Bueno','2027-06-22');
+INSERT INTO posto VALUES(11,5,'Kinder Bueno','2024-08-11');
+INSERT INTO posto VALUES(14,5,'Crostatina','2024-06-03');
+INSERT INTO posto VALUES(15,3,'Crostatina','2024-08-13');
+INSERT INTO posto VALUES(14,1,'Patatine','2025-03-21');
+INSERT INTO posto VALUES(15,5,'Coca',NULL);
 
-INSERT INTO merendina VALUES('1990-05-14','kinde bueno');
+INSERT INTO persona VALUES('AAAAAAAAAAAAAAAA','Gino','Street','hgls57');
+INSERT INTO persona VALUES('BBBBBBBBBBBBBBBB','Padre','Maronno','pgne67');
+INSERT INTO persona VALUES('CCCCCCCCCCCCCCCC','Giulio','Pizzirilli','mspo50');
+INSERT INTO persona VALUES('DDDDDDDDDDDDDDDD','Giggio','Sandreotti','psot78');
 
-INSERT INTO persona VALUES('PSNDNEJ50KSKDM501I','Gino','Street','hgls57');
-INSERT INTO persona VALUES('PSODNSDNESKDSND53I','Padre','Maronno','pgne67');
-INSERT INTO persona VALUES('SSSIDJSEIJD£DM501I','Giulio','Pizzirilli','mspo50');
-INSERT INTO persona VALUES('SSSSKRFGIJD£DM501I','Giggio','Sandreotti','psot78');
+INSERT INTO prodotto_venduto VALUES('15:20','Fanta','AAAAAAAAAAAAAAAA');
+INSERT INTO prodotto_venduto VALUES('20:01','Crostatina','CCCCCCCCCCCCCCCC');
+INSERT INTO prodotto_venduto VALUES('13:56','Fanta','AAAAAAAAAAAAAAAA');
+INSERT INTO prodotto_venduto VALUES('16:40','Kinder Bueno','DDDDDDDDDDDDDDDD');
+INSERT INTO prodotto_venduto VALUES('09:15','Accendino','CCCCCCCCCCCCCCCC');
+INSERT INTO prodotto_venduto VALUES('09:21','Crostatina','CCCCCCCCCCCCCCCC');
 
-INSERT INTO prodotto_venduto VALUES('15.20','Fanta','SSSSKRFGIJD£DM501I');
-INSERT INTO prodotto_venduto VALUES('20.05','kinder','PSODNSDNESKDSND53I');
-INSERT INTO prodotto_venduto VALUES('15.22','Fanta','PSNDNEJ50KSKDM501I');
-
-use distributore;
 show tables;
 
-select * from merendina;
-
-SELECT DISTINCT tipo FROM prodotto;
-SELECT * FROM posto;
-SELECT COUNT(*) FROM posto WHERE posizione=5;
+SELECT * from prodotto;

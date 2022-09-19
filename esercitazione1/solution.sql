@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS persona(
 CREATE TABLE IF NOT EXISTS prodotto_venduto(
     tempo_vendita TIME NOT NULL UNIQUE,
     prodotto VARCHAR(50) NOT NULL,
-    CF VARCHAR(16) NOT NULL,
+    CF VARCHAR(16) NULL,
     PRIMARY KEY(tempo_vendita,prodotto),
     FOREIGN KEY(CF) REFERENCES persona(CF),
     FOREIGN KEY(prodotto) REFERENCES prodotto(nome)
@@ -47,8 +47,15 @@ INSERT INTO prodotto VALUES('Fanta',2,'BEVANDA');
 INSERT INTO prodotto VALUES('Coca',2,'BEVANDA');
 INSERT INTO prodotto VALUES('Kinder Bueno',1.80,'MERENDINA');
 INSERT INTO prodotto VALUES('Fiesta',0.90,'MERENDINA');
+INSERT INTO prodotto VALUES('Succo di frutta (Pera)',1,'BEVANDA');
+INSERT INTO prodotto VALUES('Succo di frutta (Mela)',1,'BEVANDA');
+INSERT INTO prodotto VALUES('Succo di frutta (Pesca)',1,'BEVANDA');
+INSERT INTO prodotto VALUES('Esta The',1.50,'BEVANDA');
 INSERT INTO prodotto VALUES('Crostatina',0.60,'MERENDINA');
 INSERT INTO prodotto VALUES('Patatine',1.20,'MERENDINA');
+INSERT INTO prodotto VALUES('Succo di Frutta BIO Pesca',1.60,'BEVANDA');
+INSERT INTO prodotto VALUES('Patatine Mela Bio',1.20,'MERENDINA');
+INSERT INTO prodotto VALUES('Torta della nonna Bio',5.50,'MERENDINA');
 INSERT INTO prodotto VALUES('Accendino',3,'ALTRO');
 INSERT INTO prodotto VALUES('Cartine_lunghe',1,'ALTRO');
 
@@ -75,6 +82,8 @@ INSERT INTO persona VALUES('DDDDDDDDDDDDDDDD','Giggio','Sandreotti','psot78');
 INSERT INTO prodotto_venduto VALUES('15:20','Fanta','AAAAAAAAAAAAAAAA');
 INSERT INTO prodotto_venduto VALUES('20:01','Crostatina','CCCCCCCCCCCCCCCC');
 INSERT INTO prodotto_venduto VALUES('13:56','Fanta','AAAAAAAAAAAAAAAA');
+INSERT INTO prodotto_venduto VALUES('14:16','Crostatina',NULL);
+INSERT INTO prodotto_venduto VALUES('14:29','Kinder Bueno',NULL);
 INSERT INTO prodotto_venduto VALUES('16:40','Kinder Bueno','DDDDDDDDDDDDDDDD');
 INSERT INTO prodotto_venduto VALUES('09:15','Accendino','CCCCCCCCCCCCCCCC');
 INSERT INTO prodotto_venduto VALUES('09:21','Crostatina','CCCCCCCCCCCCCCCC');
@@ -82,3 +91,25 @@ INSERT INTO prodotto_venduto VALUES('09:21','Crostatina','CCCCCCCCCCCCCCCC');
 show tables;
 
 SELECT * from prodotto;
+
+
+-- Quanti prodotti venduti in totale
+SELECT COUNT(*) FROM prodotto_venduto;
+
+-- L'elenco di tutte le persone registrate nel sistema ordinate per Cognome-Nome.
+SELECT cognome,nome FROM persona ORDER BY cognome,nome;
+
+-- Quante persone diverse hanno comprato dalla macchinetta
+SELECT COUNT(DISTINCT CF) FROM prodotto_venduto;
+
+-- Le prime 3 bevande più costose
+SELECT nome, costo FROM prodotto ORDER BY costo DESC LIMIT 3;
+
+-- Tutti i prodotti che contengono la parola "bio" con un range di prezzo tra 1 e 5 euro.
+SELECT nome, costo FROM prodotto WHERE nome LIKE '%bio%' AND costo < 5;
+
+-- L'articolo non alimentare meno costoso.
+SELECT nome, costo FROM prodotto ORDER BY costo LIMIT 1;
+
+-- Il numero degli acquisti effettuati senza chiavetta.
+SELECT COUNT(*) FROM prodotto_venduto WHERE CF IS NULL;

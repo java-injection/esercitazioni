@@ -62,11 +62,11 @@ CREATE TABLE IF NOT EXISTS squadre(
     squadre_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     tipo ENUM('M','S','G') NOT NULL,
-    esploratori_id INT UNSIGNED NOT NULL, -- capo
-    FOREIGN KEY (esploratori_id) REFERENCES esploratori(esploratori_id)
+    capo_id INT UNSIGNED NOT NULL, -- capo
+    FOREIGN KEY (capo_id) REFERENCES esploratori(esploratori_id)
 );
 
-INSERT INTO squadre(nome, tipo, esploratori_id) VALUES
+INSERT INTO squadre(nome, tipo, capo_id)VALUES
                                           ('Alpha Team','M',2),  --  Hulk Benspar
                                           ('Beta Providers','S',3), -- Gonzalo Geriz
                                           ('Team Defence','M',13),  -- Tanja Gottemberg
@@ -193,22 +193,43 @@ INSERT INTO squadre_spedizioni (squadre_id, spedizioni_id) VALUES
 SELECT e.nome, e.cognome from esploratori e JOIN squadre s ON e.esploratori_id = s.squadre_id WHERE tipo = 'M' OR tipo = 'S';
 
 # L'elenco di tutte le spedizioni attive nei settori 'alpha' e 'beta' sull'oggetto "UNK-99".
-
+select spedizioni_id from spedizioni s join destinazioni d using(destinazioni_id) where (d.settore = 'alpha' OR d.settore = 'beta') AND d.sigla = 'UNK-99';
 
 # Il luogo che ha ricevuto la spedizione più lunga e il nome del team che l'ha eseguita.
-
+select d.sigla as destinazione, t.nome as team, TIMESTAMPDIFF(HOUR, s.data_inizio, s.data_fine) AS durata, s.spedizioni_id
+from squadre t
+join squadre_spedizioni ss using(squadre_id)
+join spedizioni s using(spedizioni_id)
+join destinazioni d using(destinazioni_id)
+ORDER BY durata desc limit 1;
 
 # L'elenco di tutte le spedizioni che hanno interessato luoghi con codice che inizia per "UNK"
+select s.spedizioni_id
+from spedizioni s
+join destinazioni d using(destinazioni_id)
+where d.sigla REGEXP '^UNK.*$';
 
 
 # L'elenco in ordine alfabetico di tutti gli esploratori in grado di usare almeno un attrezzatura speciale
+select distinct e.nome, e.cognome
+from esploratori e
+join attrezzature_esploratori ae using(esploratori_id)
+order by e.nome, e.cognome;
+
 
 
 # L'elenco dei capisquadra che sanno usare uno o più attrezzature speciali
-
+select distinct e.nome, e.cognome
+from esploratori e
+join attrezzature_esploratori ae using(esploratori_id)
+join squadre s using(capo_id)
+order by e.nome, e.cognome;
 
 # Il numero di spedizioni fatte su "UNK-83"
-
+select COUNT(s.spedizioni_id) AS 'num spedizioni su UNK-83'
+from spedizioni s
+join destinazioni d using(destinazioni_id)
+where d.sigla = 'UNK-83';
 
 # Si visualizzi la lista delle squadre e dei rispettivi capi squadra
 # Ad es:
@@ -216,11 +237,36 @@ SELECT e.nome, e.cognome from esploratori e JOIN squadre s ON e.esploratori_id =
 # Team Defence - Kim Ahiosky
 # Gamma Deliver - Simon Renegade
 
-
-# L'elenco dei Team che hanno partecipato a spedizioni che si sono recate presso il luogo "UNK-83" settore beta.
-
-
-# L'elenco degli strumenti speciali usati nelle spedizioni effettuate da tutti i team sul luogo "UNK-99"
+select s.nome as 'squadra', e.nome, e.cognome from squadre s
+join esploratori e using(capo_id);
 
 
+# L'elenco dei Team che hanno partecipato a spedizioni che si sono recate presso il luogo "UNK-84" settore beta.
 
+select t.nome 'team', d.sigla 'luogo', d.settore from squadre t
+join squadre_spedizioni using(squadre_id)
+join spedizioni using(spedizioni_id)
+join destinazioni d using(destinazioni_id)
+where d.sigla = 'UNK-84' AND d.settore = 'beta';
+
+# L'elenco di tutti gli strumenti speciali che i team delle spedizioni su UNK-99 potevano portare con se
+
+    select distinct a.nome from attrezzature a
+    join attrezzature_esploratori ae using(attrezzature_id)
+    join esploratori e using(esploratori_id)
+    join squadre_esploratori se using(esploratori_id)
+    join squadre s on se.esploratori_id = s.esploratori_id
+    join squadre_spedizioni ss on s.squadre_id = ss.squadre_id
+    join spedizioni sp using(spedizioni_id)
+    join destinazioni d using(destinazioni_id);
+ --   WHERE d.settore = 'UNK-99';
+
+    select distinct a.nome from attrezzature a
+    join attrezzature_esploratori ae ON a.attrezzature_id = ae.attrezzature_id
+    join esploratori e ON ae.esploratori_id = e.esploratori_id
+    join squadre_esploratori se ON e.esploratori_id = se.esploratori_id
+    join squadre s ON se.esploratori_id = s.esploratori_id
+    join squadre_spedizioni ss on s.squadre_id = ss.squadre_id
+    join spedizioni sp using(spedizioni_id)
+    join destinazioni d using(destinazioni_id);
+    -- WHERE d.settore = 'UNK-99';

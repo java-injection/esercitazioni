@@ -127,10 +127,15 @@ INSERT INTO squadre_esploratori (squadre_id, esploratori_id, roulo) VALUES    --
                                                                         (3,5,'digger'),
                                                                         (3,6,'explorer'),
                                                                         (3,8,'explorer'),
+                                                                        (3,12,'explorer'),
                                                                         (4,13,'leader'),
                                                                         (4,10,'explorer'),
                                                                         (4,11,'explorer'),
-                                                                        (4,3,'explorer');
+                                                                        (4,3,'explorer'),
+                                                                        (4,7,'explorer'),
+                                                                        (4,14,'explorer'),
+                                                                        (4,9,'explorer');
+
 
 
 CREATE TABLE IF NOT EXISTS attrezzature_esploratori(
@@ -251,15 +256,19 @@ where d.sigla = 'UNK-84' AND d.settore = 'beta';
 
 # L'elenco di tutti gli strumenti speciali che i team delle spedizioni su UNK-99 potevano portare con se
 
-    select distinct a.nome from attrezzature a
-    join attrezzature_esploratori ae using(attrezzature_id)
-    join esploratori e using(esploratori_id)
-    join squadre_esploratori se using(esploratori_id)
-    join squadre s on se.esploratori_id = s.esploratori_id
+SELECT * FROM attrezzature;
+SELECT * FROM esploratori;
+SELECT * from squadre_esploratori;
+
+    select distinct a.nome, d.sigla from attrezzature a
+    join attrezzature_esploratori ae ON a.attrezzature_id = ae.attrezzature_id
+    join esploratori e ON ae.esploratori_id = e.esploratori_id
+    join squadre_esploratori se ON e.esploratori_id = se.esploratori_id
+    join squadre s on se.squadre_id = s.squadre_id
     join squadre_spedizioni ss on s.squadre_id = ss.squadre_id
     join spedizioni sp using(spedizioni_id)
-    join destinazioni d using(destinazioni_id);
- --   WHERE d.settore = 'UNK-99';
+    join destinazioni d using(destinazioni_id)
+    WHERE d.sigla = 'UNK-99';
 
     select distinct a.nome from attrezzature a
     join attrezzature_esploratori ae ON a.attrezzature_id = ae.attrezzature_id
@@ -270,3 +279,5 @@ where d.sigla = 'UNK-84' AND d.settore = 'beta';
     join spedizioni sp using(spedizioni_id)
     join destinazioni d using(destinazioni_id);
     -- WHERE d.settore = 'UNK-99';
+
+    show tables;

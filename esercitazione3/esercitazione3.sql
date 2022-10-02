@@ -53,7 +53,7 @@ create table tratte_treni(
     arrivo time not null,
     foreign key(id_treno) references treni(id_treno),
     foreign key(id_tratta) references tratte(id_tratta),
-    unique(id_tratta,id_treno)
+    unique(id_tratta,id_treno,partenza)
 );
 
 
@@ -250,7 +250,27 @@ insert into tratte_treni(id_treno, id_tratta, partenza, arrivo) VALUES
                                                                     (7,5,'08:55','14:05'),
                                                                     (7,34,'14:20','18:17'),
                                                                     (7,9,'18:30','21:00'),
-                                                                    (7,37,'21:20','22:13');
+                                                                    (7,37,'21:20','22:13'),
+                                                                    (8,20,'07:45','10:30'),
+                                                                    (8,19,'10:55','16:07'),
+                                                                    (8,33,'16:40','18:10'),
+                                                                    (8,26,'18:31','23:08'),
+                                                                    (9,33,'05:10','07:00'),
+                                                                    (9,24,'07:40','10:40'),
+                                                                    (9,4,'11:20','13:33'),
+                                                                    (9,25,'14:00','19:04'),
+                                                                    (9,14,'21:30','23:22'),
+                                                                    (10,11,'07:10','08:18'),
+                                                                    (10,17,'08:30','10:50'),
+                                                                    (10,36,'11:10','12:36'),
+                                                                    (10,16,'13:10','16:55'),
+                                                                    (11,3,'09:10','12:29'),
+                                                                    (11,18,'13:00','16:11'),
+                                                                    (11,21,'16:44','18:15'),
+                                                                    (11,7,'19:00','21:25'),
+                                                                    (11,21,'21:36','23:41');
+
+
 
 
 
@@ -263,8 +283,4 @@ select * from treni;
 select * from vagoni;
 
 
-select id_tratta, c.nome, c2.nome
-from tratte
-    JOIN city c on tratte.id_city_partenza = c.id_city
-    join city c2 on tratte.id_city_arrivo = c2.id_city
 

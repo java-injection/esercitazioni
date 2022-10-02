@@ -60,7 +60,7 @@ create table tratte_treni(
 insert into categorie (nome) values
                                  ('Freccia Rossa'),
                                  ('Regionale'),
-                                 ('Interreggionale'),
+                                 ('Interregionale'),
                                  ('Merci');
 
 
@@ -68,7 +68,7 @@ insert into treni (id_treno, id_categoria, max_speed, data_costruzione) values
                                                                             (1,1,350,'2010-02-23'),
                                                                             (2,2,320,'1998-05-11'),
                                                                             (3,2,110,'1998-02-03'),
-                                                                            (4,3,240,'1994-02-15'),
+                                                                            (4,3,385,'1994-02-15'),
                                                                             (5,4,340,'2010-03-08'),
                                                                             (6,2,330,'2016-01-14'),
                                                                             (7,3,260,'2016-12-11'),
@@ -282,5 +282,216 @@ select * from treni;
 
 select * from vagoni;
 
+
+-- ESERCIZI
+
+#1  Listare tutte le città, e per ogni città quelle il cui numero di tratte che partono da quella città ( non considerare le
+#  fermate intermedie) sia superiore a 4.
+#   Le città vanno ordinate in ordine alfabetico.
+
++--------------+----------+
+| nome         | partenze |
++--------------+----------+
+| Milano       |        5 |
+| Napoli       |        8 |
+| Roma Termini |        6 |
++--------------+----------+
+3 rows in set (0.00 sec)
+
+
+
+#2 stampare per ogni categoria di treno il numero di tratte esistenti, e infine il totale generale come nell'esempio
+
++-----------------+---------------+
+| categoria       | numero tratte |
++-----------------+---------------+
+| Freccia Rossa   |            11 |
+| Interreggionale |            10 |
+| Merci           |             7 |
+| Regionale       |            10 |
+| totale generale |            38 |
++-----------------+---------------+
+5 rows in set (0.00 sec)
+
+
+#3 stampare la lista delle tratta con id, nome della città di partenza e nome della città di arrivo, il tutto ordinato
+# per id
+
++-----------+----------------+----------------+
+| id_tratta | nome           | nome           |
++-----------+----------------+----------------+
+|         1 | Roma Termini   | Milano         |
+|         2 | Roma Termini   | Torino         |
+|         3 | Roma Termini   | Firenze        |
+|         4 | Roma Termini   | Napoli         |
+|         5 | Roma Termini   | Verona         |
+|         6 | Roma Termini   | Fiumicino      |
+|         7 | Roma Tiburtina | Perugia        |
+|         8 | Roma Tiburtina | Terni          |
+|         9 | Roma Tiburtina | Padova         |
+|        10 | Milano         | Roma Termini   |
+|        11 | Milano         | Torino         |
+|        12 | Milano         | Perugia        |
+|        13 | Milano         | Napoli         |
+|        14 | Milano         | Reggio Emilia  |
+|        15 | Torino         | Roma Termini   |
+|        16 | Torino         | Bologna        |
+|        17 | Torino         | Verona         |
+|        18 | Firenze        | Perugia        |
+|        19 | Firenze        | Salerno        |
+|        20 | Perugia        | Firenze        |
+|        21 | Perugia        | Roma Tiburtina |
+|        22 | Perugia        | Napoli         |
+|        23 | Terni          | Perugia        |
+|        24 | Napoli         | Roma Termini   |
+|        25 | Napoli         | Milano         |
+|        26 | Napoli         | Torino         |
+|        27 | Napoli         | Firenze        |
+|        28 | Napoli         | Perugia        |
+|        29 | Napoli         | Salerno        |
+|        30 | Napoli         | Verona         |
+|        31 | Napoli         | Padova         |
+|        32 | Salerno        | Roma Tiburtina |
+|        33 | Salerno        | Napoli         |
+|        34 | Verona         | Roma Tiburtina |
+|        35 | Verona         | Milano         |
+|        36 | Verona         | Torino         |
+|        37 | Padova         | Verona         |
+|        38 | Arezzo         | Firenze        |
+|        39 | Fiumicino      | Roma Termini   |
+|        40 | Fiumicino      | Roma Tiburtina |
++-----------+----------------+----------------+
+40 rows in set (0.01 sec)
+
+
+#4 Elencare tutte le tratte che non partono o non arrivano e nemmeno passano da nessuna stazione di roma.
+#  Le tratte vanno elencate come per la query 1 -> id, città di partenza, città di arrivo
+
++-----------+---------+---------------+
+| id_tratta | nome    | nome          |
++-----------+---------+---------------+
+|        11 | Milano  | Torino        |
+|        12 | Milano  | Perugia       |
+|        14 | Milano  | Reggio Emilia |
+|        16 | Torino  | Bologna       |
+|        17 | Torino  | Verona        |
+|        18 | Firenze | Perugia       |
+|        20 | Perugia | Firenze       |
+|        23 | Terni   | Perugia       |
+|        25 | Napoli  | Milano        |
+|        28 | Napoli  | Perugia       |
+|        29 | Napoli  | Salerno       |
+|        31 | Napoli  | Padova        |
+|        33 | Salerno | Napoli        |
+|        35 | Verona  | Milano        |
+|        36 | Verona  | Torino        |
+|        37 | Padova  | Verona        |
+|        38 | Arezzo  | Firenze       |
++-----------+---------+---------------+
+
+#5 Elencare le prime cinque tratte con il numero più alto in percorrenza. Si stampi anche le città di partenza, arrivo e
+# tempo di percorrenza. In fondo ai risultati aggiungere anche la media dei tempi di percorrenza
+# di tutte le tratte e anche la tratta che impiega più tempo di tutte. Infine aggiungere delle decorazioni di asterischi
+# esattamente nei punti come mostrati nell'esempio.
+
+-- TIP usare questa funzione per la stampa e il calcolo delle differenze temporali select TIMEDIFF(arrivo,partenza) from tratte_treni;
+-- TIP2  usare SEC_TO_TIME(AVG(TIME_TO_SEC(TIMEDIFF(arrivo,partenza)))) per prettystampare la media di una differenza temporale
+-- TIP3 ()()()()()()()()()()()()()()()()()()()()
+
++-----------------+-----------------+------------------+-----------------+
+| nome            | nome            | numero_treni     | durata          |
++-----------------+-----------------+------------------+-----------------+
+| Milano          | Roma Termini    | 3                | 05:00:00        |
+| Milano          | Reggio Emilia   | 2                | 03:00:00        |
+| Firenze         | Perugia         | 2                | 02:40:00        |
+| Perugia         | Firenze         | 2                | 03:40:00        |
+| Roma Tiburtina  | Perugia         | 2                | 02:10:00        |
+| *************** | *************** | ***************  | *************** |
+| --------        | --------        | media durate     | 03:14:17.3684   |
+| Napoli          | Milano          | tratta più lunga | 09:10:00        |
+| *************** | *************** | ***************  | *************** |
++-----------------+-----------------+------------------+-----------------+
+9 rows in set (0.00 sec)
+
+
+#6 Listare tutte le tratte senza alcuna fermata intermedia
+
++-----------+----------------+----------------+
+| id_tratta | nome           | nome           |
++-----------+----------------+----------------+
+|         9 | Roma Tiburtina | Padova         |
+|        10 | Milano         | Roma Termini   |
+|        11 | Milano         | Torino         |
+|        14 | Milano         | Reggio Emilia  |
+|        16 | Torino         | Bologna        |
+|        17 | Torino         | Verona         |
+|        18 | Firenze        | Perugia        |
+|        20 | Perugia        | Firenze        |
+|        23 | Terni          | Perugia        |
+|        24 | Napoli         | Roma Termini   |
+|        25 | Napoli         | Milano         |
+|        29 | Napoli         | Salerno        |
+|        33 | Salerno        | Napoli         |
+|        34 | Verona         | Roma Tiburtina |
+|        37 | Padova         | Verona         |
+|        38 | Arezzo         | Firenze        |
+|        39 | Fiumicino      | Roma Termini   |
+|        40 | Fiumicino      | Roma Tiburtina |
++-----------+----------------+----------------+
+18 rows in set (0.00 sec)
+
+
+#7 Elencare tutte le città da cui partono treni intereggionali di velocità superiore alla media di treni freccia rossa
+# **** non usare direttamente l'id della categoria dei frecciarosa. ****
+
++--------------+
+| nome         |
++--------------+
+| Roma Termini |
+| Torino       |
++--------------+
+2 rows in set (0.00 sec)
+
+
+# 8 listare i treni (id e classe) che vanno e vengono da milano ( partenza, arrivo, non tappe intermedie) con il numero di vagoni collegati.
+# Anche i treni merci devono comparire ma con 0 vagoni. Il tutto va ordinato in ordine decrescente per numero vagoni.
+
+# tip (* è brutto)
+
++----------+---------------+------------+
+| id_treno | nome          | num_vagoni |
++----------+---------------+------------+
+|        1 | Freccia Rossa |          7 |
+|       10 | Freccia Rossa |          5 |
+|        6 | Regionale     |          4 |
+|        5 | Merci         |          0 |  -- eheh
+|        9 | Merci         |          0 |  -- uahuah vi viene sempre 1 vero ? :D
++----------+---------------+------------+
+5 rows in set (0.00 sec)
+
+
+#9 si stampi per ogni treno, id, classe, data costruzione,  il numero di vagoni in business class, il numero di bagni e se il treno
+# ha meno di 3 bagni si scriva "vergognoso" viceversa "regolare"
+# Quanto sopra vale per tutti i treni costruiti prima del 2005. Per gli altri l'etichetta sarà "nuovi e profumati"
+# a prescindere da tutto.
+#I treni vanno listati in ordine di data costruzione, dal più nuovo al più vecchio.
+
++----------+----------------+------------------+--------------+--------------------+-------------------+
+| id_treno | nome           | data_costruzione | numero_bagni | vagoni in business | status            |
++----------+----------------+------------------+--------------+--------------------+-------------------+
+|        7 | Interregionale | 2016-12-11       |            5 |                  3 | nuovi e profumati |
+|        6 | Regionale      | 2016-01-14       |            2 |                  0 | nuovi e profumati |
+|        5 | Merci          | 2010-03-08       |            0 |                  0 | nuovi e profumati |
+|        1 | Freccia Rossa  | 2010-02-23       |            4 |                  1 | nuovi e profumati |
+|        8 | Interregionale | 2002-09-01       |            4 |                  1 | regolare          |
+|       11 | Freccia Rossa  | 2002-08-18       |            6 |                  1 | regolare          |
+|       10 | Freccia Rossa  | 2002-06-16       |            3 |                  3 | regolare          |
+|       12 | Merci          | 1998-08-12       |            0 |                  0 | vergognoso        |
+|        2 | Regionale      | 1998-05-11       |            2 |                  0 | vergognoso        |
+|        3 | Regionale      | 1998-02-03       |            0 |                  0 | vergognoso        |
+|        4 | Interregionale | 1994-02-15       |            3 |                  2 | regolare          |
+|        9 | Merci          | 1991-05-26       |            0 |                  0 | vergognoso        |
++----------+----------------+------------------+--------------+--------------------+-------------------+
+12 rows in set (0.00 sec)
 
 

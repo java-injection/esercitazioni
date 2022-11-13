@@ -67,7 +67,7 @@ use esercitazione4;
 -- Alterare quindi la tabella dei valori con una nuova colonna "anomaly3" di tipo booleano inizializzata a false. 
 
 -- ***************************************************************************************************************************
--- *								FASE 5   AUTO-DETECT DELlE ANOMALIE 3
+-- *								FASE 5   AUTO-DETECT DELLE ANOMALIE 3
 -- ***************************************************************************************************************************
 
 -- Modificare il trigger di fase 3 in modo che riconosca anche le anomalie 3

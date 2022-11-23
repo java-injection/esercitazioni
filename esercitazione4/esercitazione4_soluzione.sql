@@ -211,7 +211,7 @@ DO BEGIN
     DECLARE door_value BOOL;
     DECLARE errno INT;
     -- ***** HANDLER ******
-	DECLARE EXIT HANDLER FOR 1062
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
 		GET DIAGNOSTICS CONDITION 1 
 		errno = MYSQL_ERRNO,
@@ -219,7 +219,7 @@ DO BEGIN
 		CALL warn(CONCAT('ERRNO=',errno,', error=',msg),"HIGH");
     END;
 
-    SET execution = RAND_INTERVAL(1,2);
+    SET execution = RAND_INTERVAL(1,5);
     IF
         execution = 1 -- un quinto delle possibilità
     THEN

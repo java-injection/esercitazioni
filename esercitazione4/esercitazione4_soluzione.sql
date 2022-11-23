@@ -31,7 +31,7 @@ BEGIN
     IF
         (minimo IS NULL OR massimo IS NULL)
     THEN
-        SET @exception = 'PESCE METTIMI DEI NUMERI';
+        SET @exception = 'Non posso eseguire RAND_INTERVAL con minimo o massimo con valori NULL';
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = @exception,
         MYSQL_ERRNO= 1062;
@@ -110,7 +110,6 @@ CREATE TABLE sensor_values(
 DROP EVENT IF EXISTS sensor1_simulation;
 
 DELIMITER %%
-
 CREATE EVENT sensor1_simulation
     ON SCHEDULE EVERY 1 SECOND
     STARTS CURRENT_TIMESTAMP
@@ -130,8 +129,7 @@ DO BEGIN
         INSERT INTO sensor_values VALUES(
                                          NOW(),
                                          CONCAT('{
-                                                  "values": {
-                                                    "value": [
+                                                    "values": [
                                                       {
                                                         "measure": "voltage",
                                                         "unit": "V",
@@ -143,7 +141,6 @@ DO BEGIN
                                                         "value": ',current_value,'
                                                       }
                                                     ]
-                                                  }
                                                 }'),
                                          1);
         END;
@@ -169,6 +166,147 @@ DELIMITER ;
 -- si definisca una tabella "sensori" con le specifiche dei sensori: id, nome, tipologia e quant'altro serve
 -- si definisca una tabella "sensor_values" che raccola i valori dei sensori, 
 -- ogni valore deve essere collegato al rispettivo sensore di appartenenza
+
+
+-- ***** RISOLUZIONE 2. 
+-- Creazione di una tabella temporanea per variabili fuori sessione
+
+DROP TABLE IF EXISTS states;
+
+CREATE TABLE states(
+	_key CHAR(20) PRIMARY KEY,
+    _value CHAR(50)
+) ENGINE = MEMORY;
+
+
+DELIMITER %%
+CREATE FUNCTION S2_LAST_VALUE_KEY()
+RETURNS CHAR(20)
+DETERMINISTIC
+BEGIN
+	RETURN "s2_last_value";
+END %%
+DELIMITER ;
+
+DELIMITER %%
+CREATE FUNCTION S2_EVENT_COUNT()
+RETURNS CHAR(20)
+DETERMINISTIC
+BEGIN
+	RETURN "s2_event_count";
+END %%
+DELIMITER ;
+
+DROP EVENT IF EXISTS sensor2_simulation;
+
+DELIMITER %%
+CREATE EVENT sensor2_simulation
+    ON SCHEDULE EVERY 1 SECOND
+    STARTS CURRENT_TIMESTAMP
+    ENDS CURRENT_TIMESTAMP + INTERVAL 5 MINUTE
+ON COMPLETION PRESERVE
+DO BEGIN
+	DECLARE msg TEXT;
+    DECLARE execution INT;
+    DECLARE door_value BOOL;
+    DECLARE errno INT;
+    -- ***** HANDLER ******
+	DECLARE EXIT HANDLER FOR 1062
+    BEGIN
+		GET DIAGNOSTICS CONDITION 1 
+		errno = MYSQL_ERRNO,
+        msg = MESSAGE_TEXT;
+		CALL warn(CONCAT('ERRNO=',errno,', error=',msg),"HIGH");
+    END;
+
+    SET execution = RAND_INTERVAL(1,2);
+    IF
+        execution = 1 -- un quinto delle possibilità
+    THEN
+        BEGIN
+			DECLARE door_value BOOL; -- value
+            DECLARE first_rand INT;
+			SET door_value = (SELECT _value FROM states WHERE _key = S2_LAST_VALUE_KEY());
+            SET first_rand = door_value;
+			SET door_value = COALESCE(door_value, RAND_INTERVAL(0,1));
+			SET door_value = NOT door_value;
+            IF 
+				first_rand IS NULL
+            THEN
+				INSERT INTO states VALUES(S2_LAST_VALUE_KEY(),door_value);
+			ELSE
+				UPDATE states SET _value=door_value WHERE _key = S2_LAST_VALUE_KEY();
+			END IF;
+			INSERT INTO sensor_values VALUES(
+                                         NOW(),
+                                         CONCAT('{
+                                                    "values": [
+                                                      {
+                                                        "measure": "door state",
+                                                        "unit": "open/closed",
+                                                        "value": ',door_value,'
+                                                      }
+                                                    ]
+                                                }'),
+                                         2);
+        END;
+    END IF;
+
+END %%
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS cleanup;
+
+DELIMITER $$
+CREATE PROCEDURE cleanup()
+BEGIN
+	DELETE FROM sensor_values;
+    DELETE FROM states;
+    DELETE FROM warnings;
+    SELECT * FROM sensor_values;
+    SELECT * FROM states;
+    SELECT * FROM warnings;
+END $$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS test;
+
+DELIMITER $$
+CREATE PROCEDURE test()
+BEGIN
+		DECLARE errno INT;
+		DECLARE msg TEXT;
+        DECLARE door_value BOOL; -- value
+		DECLARE EXIT HANDLER FOR SQLEXCEPTION
+		BEGIN
+			GET CURRENT DIAGNOSTICS CONDITION 1 
+			  errno = MYSQL_ERRNO,
+			  msg = MESSAGE_TEXT;
+			CALL warn(msg,"HIGH");
+		END;
+		        
+			SET door_value = (SELECT _value FROM states WHERE _key = "s2_last_value");
+			SET door_value = COALESCE(door_value, RAND_INTERVAL(0,1));
+			SET door_value = NOT door_value;
+            INSERT INTO states VALUES("s2_last_value",door_value);
+			INSERT INTO sensor_values VALUES(
+                                         NOW(),
+                                         CONCAT('{
+                                                    "values": [
+                                                      {
+                                                        "measure": "door state",
+                                                        "unit": "open/closed",
+                                                        "value": ',door_value,'
+                                                      }
+                                                    ]
+                                                }'),
+                                         2);
+                                         
+END $$
+DELIMITER ;
+
+
 
 
 
@@ -219,6 +357,54 @@ DELIMITER ;
 
 
 
+
+DROP TABLE IF EXISTS t1;
+CREATE TABLE t1 (c1 TEXT NOT NULL);
+DROP PROCEDURE IF EXISTS p;
+delimiter //
+CREATE PROCEDURE p ()
+BEGIN
+  -- Declare variables to hold diagnostics area information
+  DECLARE errcount INT;
+  DECLARE errno INT;
+  DECLARE msg TEXT;
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    -- Here the current DA is nonempty because no prior statements
+    -- executing within the handler have cleared it
+    GET CURRENT DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'current DA before mapped insert' AS op, errno, msg;
+    GET STACKED DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'stacked DA before mapped insert' AS op, errno, msg;
+
+    -- Map attempted NULL insert to empty string insert
+    INSERT INTO t1 (c1) VALUES('');
+
+    -- Here the current DA should be empty (if the INSERT succeeded),
+    -- so check whether there are conditions before attempting to
+    -- obtain condition information
+    GET CURRENT DIAGNOSTICS errcount = NUMBER;
+    IF errcount = 0
+    THEN
+      SELECT 'mapped insert succeeded, current DA is empty' AS op;
+    ELSE
+      GET CURRENT DIAGNOSTICS CONDITION 1
+        errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+      SELECT 'current DA after mapped insert' AS op, errno, msg;
+    END IF ;
+    GET STACKED DIAGNOSTICS CONDITION 1
+      errno = MYSQL_ERRNO, msg = MESSAGE_TEXT;
+    SELECT 'stacked DA after mapped insert' AS op, errno, msg;
+  END;
+  INSERT INTO t1 (c1) VALUES('string 1');
+  INSERT INTO t1 (c1) VALUES(NULL);
+END;
+//
+delimiter ;
+CALL p();
+SELECT * FROM t1;
  
 
 
